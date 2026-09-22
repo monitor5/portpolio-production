@@ -1,0 +1,111 @@
+name: Portfolio CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portfolio-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Test application
+        run: npm test
+      - name: Test deployment and rollback
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Build public site
+        run: npm run build
+      - name: Package and verify public release
+        run: |
+          python3 ops/package-release.py --commit "$GITHUB_SHA"
+          python3 ops/update-release.py \
+            .cache/release/portfolio-deploy.tar.gz \
+            .cache/release/deployment-build-report.json \
+            --verify-only --expected-commit "$GITHUB_SHA"
+      - name: Store verified release
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: portfolio-${{ github.sha }}
+          path: |
+            .cache/release/portfolio-deploy.tar.gz
+            .cache/release/deployment-build-report.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
+          compression-level: 0
+      - name: Report deployment configuration
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED != 'true'
+        run: |
+          echo '### Deployment is not enabled' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Tests and build ran; no production deployment was attempted. Complete NAS SSH setup, then set the repository variable DEPLOY_ENABLED=true. See docs/ci-cd.md.' >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy to NAS
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://daus.uk
+    concurrency:
+      group: portfolio-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check that this is still the latest main commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [ "$latest" = "$GITHUB_SHA" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+            echo 'A newer main commit exists; this older build was not deployed.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Download the tested release
+        if: steps.current.outputs.deploy == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: portfolio-${{ github.sha }}
+          path: .cache/release
+      - name: Verify, transfer and activate
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT }}
+        run: bash ops/deploy.sh
+      - name: Verify public HTTPS routes and assets
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+        run: |
+          python3 ops/verify-public.py .cache/release/deployment-build-report.json --url "${DEPLOY_URL:-https://daus.uk}"
+          echo "Deployed and publicly verified commit $GITHUB_SHA at https://daus.uk" >> "$GITHUB_STEP_SUMMARY"

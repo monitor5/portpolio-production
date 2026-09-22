@@ -1,6 +1,6 @@
 # daus.uk 배포
 
-2026-09-22. 대상은 사용자가 지정한 NAS이며 Cloudflare Tunnel로 공개한다.
+2026-09-23. 대상은 사용자가 지정한 NAS이며 Cloudflare Tunnel로 공개한다. GitHub Actions 자동화와 현재 활성화 상태는 [CI/CD 문서](ci-cd.md)를 참고한다.
 
 ## 현재 서버 구성
 
@@ -21,12 +21,16 @@
 - `ops/compose.tunnel.yaml`: Cloudflare 연결 컨테이너. 공개 포트를 열지 않는다.
 - `ops/install-tunnel-token.py`: 숨김 입력으로 토큰을 검증하고 서버의 비밀정보 파일에 설치한다.
 - `ops/update-release.py`: 빌드 체크섬 검증, 새 릴리스 활성화, 실패 시 이전 링크 복원.
+- `ops/package-release.py`: 공개 빌드 아카이브와 체크섬·커밋 보고서 생성.
+- `ops/deploy.sh`: CI에서 검증한 아카이브를 SSH로 전송하고 활성화.
+- `ops/verify-public.py`: 공개 HTTPS 경로와 정적 파일 검증.
+- `.github/workflows/ci-cd.yml`: PR·main 테스트와 main 자동 배포.
 
 빌드에 포함된 것은 `dist/`의 HTML·JS·CSS·favicon·이미지뿐이다. 조사 메모, 소스 문서, 소스맵, 로그인 정보는 업로드하지 않는다.
 
 ## 릴리스
 
-현재 배포 릴리스: `20260922T104907Z-42455cde` (2026-09-22 19:50 KST 확인).
+마지막으로 확인한 배포 릴리스: `20260922T104907Z-42455cde` (2026-09-22 19:50 KST 확인). CI/CD 도입 중 NAS SSH 접속이 거부되어 이 릴리스를 새로 교체하지 않았다.
 
 고교 개발 경험과 스마트미러 상세, 소개 문구, 2022년 성남시청소년재단 일경험 수련을 한국어·영어·일본어로 반영했다. 복원용 이전 릴리스는 `20260922T011758Z-32de34ac`이며 `site/previous`가 가리킨다.
 

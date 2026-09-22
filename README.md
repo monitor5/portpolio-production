@@ -8,6 +8,8 @@
 
 ## 로컬 개발
 
+Node.js 24 LTS를 사용합니다 (`.nvmrc`).
+
 ```sh
 npm ci
 npm run dev
@@ -40,7 +42,9 @@ npm run preview
 
 NAS의 Nginx 컨테이너가 정적 빌드를 제공하고, 별도 Cloudflare Tunnel 컨테이너가 `daus.uk`에 연결합니다. 배포 상태와 실행·업데이트·복원 방법은 [배포 문서](docs/deployment.md)에 있습니다.
 
-GitHub 업로드만으로 운영 서버가 자동 갱신되지는 않습니다. 공개 빌드인 `dist/`만 검증 후 별도로 배포합니다. 터널 토큰은 NAS의 별도 파일에 보관하며 저장소에 포함하지 않습니다.
+GitHub Actions는 PR과 `main` push에서 테스트·빌드·배포 도구 검증을 실행하고, 공개 빌드만 릴리스 아티팩트로 보관합니다. 자동 배포를 활성화하면 `main` 검증 성공 후 NAS에 전송하고, 원점 검증 실패 시 이전 릴리스로 복원합니다. 공개 HTTPS 경로와 정적 자산도 확인합니다.
+
+**현재 CI는 활성화, CD는 NAS SSH 연결과 전용 공개키 설치 대기 상태입니다.** 연결을 확인한 뒤 저장소 변수 `DEPLOY_ENABLED=true`로 활성화합니다. 설정과 재실행 방법은 [CI/CD 운영 문서](docs/ci-cd.md)에 있습니다. 터널 토큰은 NAS의 별도 파일에 보관하며 저장소에 포함하지 않습니다.
 
 ## 참고 문서
 
