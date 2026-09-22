@@ -64,5 +64,16 @@ export const hardware = [
   { id:'epyc', name:'Dual EPYC 7452', short:'EPYC × 2', number:'4', unit:'MONTHS', label:'4개월 사용', kind:'HOME SERVER / AI EXPERIMENTS', title:'궁금해서, 듀얼 EPYC.', intro:'“CPU 메모리 대역폭을 늘리면 AI를 어디까지 돌릴 수 있을까?” 직접 확인하려고 듀얼 EPYC 서버를 집에 구축했습니다.', sections:[['가설을 실제 장비로.', 'CPU 메모리를 여러 채널로 활용하면 보급형 GPU 성능에 다가갈 수 있지 않을까. 이 생각으로 EPYC 7452 듀얼 CPU와 RAM 240GB 환경을 구성해 친구와 나눠 썼습니다.'],['4개월, 그리고 전기요금.', '집에서 서버를 쓰니 성능뿐 아니라 발열, 소음, 전력과 비용도 체감했습니다. 한 달 전기요금 48만 원은 그중 가장 선명하게 남은 교훈입니다.'],['가설과 결과는 구분합니다.', 'GPU와 동등한 성능을 달성한 사례는 아닙니다. 장비를 직접 구성하고 사용하며 가설을 확인하려 했던 실험입니다.']] },
   { id:'bc250', name:'AMD BC-250', short:'BC-250', number:'2', unit:'BOARDS', label:'두 대 구매', kind:'HARDWARE / EXPLORATION', title:'한 대도 아니고, 두 대.', intro:'특이한 하드웨어를 보면 직접 만져보고 싶어집니다. BC-250은 두 대를 구입했습니다.', sections:[['사양표 다음은 실물.', '궁금한 장비를 직접 구해 보는 것도 제 관심사의 일부입니다. BC-250 두 대의 구매 기록도 이곳에 남깁니다.']] },
   { id:'nas', name:'Custom NAS', short:'SELF-HOSTED', number:'DIY', unit:'STORAGE', label:'직접 구축', kind:'STORAGE / HOMELAB', title:'내 저장소는 직접 만들기로.', intro:'자작 NAS를 구성하고, 원격 개발 환경에서도 NAS를 활용했습니다.', sections:[['저장 환경을 직접 구성하기.', '라즈베리 파이 파일 서버부터 자작 NAS까지, 필요로 하는 환경을 직접 만들며 배웠습니다. 군 복무 중에는 워크스테이션·NAS·스마트 플러그를 연결한 공유 개발 환경을 운영했습니다.']] },
-  { id:'laptop', name:'Modified Laptop', short:'THERMAL MOD', number:'MOD', unit:'ENCLOSURE / COOLING', label:'케이스·냉각 개조', kind:'HARDWARE / PHYSICAL MODIFICATION', title:'케이스를 열면, 바꿀 게 보입니다.', intro:'노트북의 케이스와 냉각 솔루션을 직접 개조했습니다. 코드가 돌아가는 기계의 구조까지 관심이 이어집니다.', sections:[['기계의 안쪽까지.', '일체형 PC의 방열 구조를 바꾸고 VM을 돌리던 때부터, 노트북의 케이스와 냉각 솔루션을 손보기까지. 직접 뜯고 바꾸면서 기계를 배워 왔습니다.']] }
+  { id:'laptop', name:'Modified Laptop', short:'THERMAL MOD', number:'MOD', unit:'ENCLOSURE / COOLING', label:'케이스·냉각 개조', kind:'HARDWARE / PHYSICAL MODIFICATION', title:'케이스를 열면, 바꿀 게 보입니다.', intro:'노트북의 케이스와 냉각 솔루션을 직접 개조했습니다. 코드가 돌아가는 기계의 구조까지 관심이 이어집니다.', sections:[['기계의 안쪽까지.', '일체형 PC의 방열 구조를 바꾸고 VM을 돌리던 때부터, 노트북의 케이스와 냉각 솔루션을 손보기까지. 직접 뜯고 바꾸면서 기계를 배워 왔습니다.']] },
+  {
+    id:'smart-mirror', name:'Smart Mirror', short:'SMART MIRROR', number:'WHY', unit:'ALWAYS ON', label:'고교 창의융합학술프로젝트', kind:'HARDWARE / SOFTWARE / EFFICIENCY',
+    title:'잘 돌아가는데, 굳이 어셈블리까지.',
+    intro:'스마트미러는 이미 작동했습니다. 그런데 거울 하나를 위해 노트북을 24시간 켜 두는 게 계속 걸렸습니다. 그 질문이 OS를 바꾸고 어셈블리어까지 손대게 했습니다.',
+    sections:[
+      ['이미 작동했던 스마트미러.', '고등학교 창의융합학술프로젝트에서 조장을 맡아 전체 과정을 설계하고, 주로 소프트웨어를 담당했습니다. 개조한 노트북에 Linux를 설치하고 MagicMirror 프로젝트를 수정해 스마트미러를 구현했습니다.'],
+      ['24시간 켜 둘 기계라면.', '결과물은 잘 작동했지만, 노트북을 상시 켜 두는 방식이 기기의 목적에 맞는지 의문이 들었습니다. 전력 사용과 실행 환경을 더 가볍게 만들 방법을 고민하며 가벼운 Linux 기반 OS를 설치했습니다.'],
+      ['어셈블리까지 내려가다, 막혔습니다.', '더 낮은 수준에서 직접 구현하면 필요한 자원을 줄일 수 있지 않을까. 그 가설로 스마트미러 프로그램을 어셈블리어로 만들어 보려 했습니다. 당시에는 언어에 대한 이해가 부족했고, 구현에 실패했습니다.'],
+      ['최종 구현은 JavaScript로.', '스마트미러는 결국 JavaScript 기반으로 구현했습니다. 이 과정에서 언어마다 다른 실행 방식과 임베디드 기기 설계의 제약을 접했습니다. 돌아가는 화면을 만든 뒤에도, 그 화면을 계속 켜 둘 기계의 조건까지 따져 보게 된 경험입니다.']
+    ]
+  }
 ];

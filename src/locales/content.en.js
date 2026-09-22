@@ -176,6 +176,21 @@ export const content = {
         ['Inside the machine.', 'From changing an all-in-one PC’s cooling structure and running VMs on it to modifying a laptop’s case and cooling solution, I have learned about machines by taking them apart and changing them.'],
       ],
     },
+    'smart-mirror': {
+      name: 'Smart Mirror',
+      short: 'SMART MIRROR',
+      unit: 'ALWAYS ON',
+      label: 'High school interdisciplinary project',
+      kind: 'HARDWARE / SOFTWARE / EFFICIENCY',
+      title: 'It worked. I still tried assembly.',
+      intro: 'The smart mirror already worked. But leaving a laptop on around the clock just to power a mirror kept bothering me. That question led me to change the OS and try writing assembly.',
+      sections: [
+        ['The mirror already worked.', 'I led a high school interdisciplinary project, planned the overall process, and primarily handled the software. I installed Linux on a modified laptop and adapted the MagicMirror project to build a working smart mirror.'],
+        ['A machine that stays on all day.', 'The result worked well, but I questioned whether keeping a laptop running all the time suited its purpose. Looking for ways to reduce power use and the demands of the runtime, I installed a lightweight Linux-based OS.'],
+        ['I went down to assembly, and got stuck.', 'Could implementing the program at a lower level reduce the resources it needed? I tried writing the smart mirror program in assembly to explore that idea. I did not understand the language well enough at the time, and the implementation failed.'],
+        ['The final implementation used JavaScript.', 'I ultimately implemented the mirror with JavaScript. Along the way, I encountered differences in how languages run and the constraints of embedded device design. Even after getting the screen to work, I kept thinking about what it took to keep the machine behind it running.'],
+      ],
+    },
   },
   publications: {
     paper: {

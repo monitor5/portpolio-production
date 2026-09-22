@@ -14,6 +14,7 @@ export const content = {
     bc250: { unit: '대', kind: '하드웨어 / 탐색' },
     nas: { name: '자작 NAS', short: '직접 운영', unit: '저장소', kind: '저장소 / 홈랩' },
     laptop: { name: '개조 노트북', short: '냉각 개조', unit: '케이스 / 냉각', kind: '하드웨어 / 기기 개조' },
+    'smart-mirror': { name: '스마트미러', short: '스마트미러', unit: '상시 구동', kind: '하드웨어 / 소프트웨어 / 효율' },
   },
   publications: { paper: { type: 'KCI 논문' }, book: { type: '출간 도서' } },
 };
