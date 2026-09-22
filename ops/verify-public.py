@@ -68,7 +68,12 @@ def make_url(base, path, token, language=None):
 
 
 def fetch(url, limit):
-    request = Request(url, headers={'Cache-Control': 'no-cache', 'Accept-Encoding': 'identity'})
+    # Cloudflare rejects urllib's default agent (1010); identify this checker.
+    request = Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (compatible; Portfolio-Deploy-Verification/1.0)',
+        'Cache-Control': 'no-cache',
+        'Accept-Encoding': 'identity',
+    })
     with urlopen(request, timeout=TIMEOUT) as response:
         if response.status != 200:
             raise ValueError(f'{url}: expected HTTP 200, received {response.status}')
