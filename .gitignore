@@ -1,0 +1,15 @@
+# Local research notes may contain private repository names and unpublished plans.
+/notes/private/
+.DS_Store
+node_modules/
+dist/
+.cache/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.log
