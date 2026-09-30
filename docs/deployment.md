@@ -2,7 +2,7 @@
 
 ## 현재 상태 — 2026-09-30
 
-NAS 수리 동안 Galmegi 개발팀 서버에 임시 원점을 준비했다. 개인 도메인은 `daus.uk`를 유지하고 수리 후 NAS로 복귀한다. **임시 원점 설치·검증은 완료했지만 Cloudflare 로그인·TLS 인증서·DNS 전환은 대기 중이다. 공개 도메인은 기존 NAS 연결을 유지한다.** CD도 `DEPLOY_ENABLED=false`이다. 전환과 복귀는 [이전 절차](migration.md), 자동화는 [CI/CD 문서](ci-cd.md)를 참고한다.
+NAS 수리 동안 Galmegi 개발팀 서버로 임시 이전했다. 개인 도메인은 `daus.uk`를 유지하고 NAS 복귀를 검증한 뒤 임시 서비스를 내린다. **인증서 설치·HTTPS 가상 호스트 활성화·DNS 전환을 마쳤으며 새 원점의 공개 검증 24개를 통과했다.** CD는 `DEPLOY_ENABLED=true`로 활성화했고 [첫 GitHub 배포](https://github.com/monitor5/portpolio-production/actions/runs/36659672747)의 전송·활성화·공개 검증도 성공했다. 전환과 복귀는 [이전 절차](migration.md), 자동화는 [CI/CD 문서](ci-cd.md)를 참고한다.
 
 | 항목 | Galmegi 임시 원점 | NAS 복귀 대상 |
 | --- | --- | --- |
@@ -11,21 +11,25 @@ NAS 수리 동안 Galmegi 개발팀 서버에 임시 원점을 준비했다. 개
 | 배포 루트 | `/opt/monitor5-portfolio` | `/volume1/docker/monitor5-portfolio` |
 | 웹 서버 | 호스트 Nginx의 별도 사이트 | 비루트 Nginx 컨테이너 |
 | 원점 | `http://127.0.0.1:4387/` | `http://127.0.0.1:4387/` |
-| 공개 연결 | `daus.uk` 전용 TLS 가상 호스트 준비 중 | 기존 Cloudflare Tunnel |
+| 공개 연결 | proxied A `13.209.179.165` → `daus.uk` 전용 HTTPS | 기존 Cloudflare Tunnel |
 | `/healthz` 원점 헤더 | `X-Portfolio-Origin: galmegi-temporary` | 최신 설정 적용 후 `X-Portfolio-Origin: nas` |
 
 임시 서버에는 전용 계정·`site/`·`incoming/`과 `restrict` 옵션의 배포 공개키를 설치했다. `ops/nginx.shared.conf`를 별도 사이트로 추가하고 Nginx 설정 검증·reload를 마쳤다. 변경 전후 기존 설정 블록 5개는 동일하며, 기존 `galmegi.com` API와 `dev.galmegi.com`의 정상 응답을 확인했다.
 
-최초 검증 릴리스는 `20260930T004953Z-42455cde`이며 소스 커밋은 `59ad657`이다. 원점 경로·자산·식별 헤더 검사 24개를 통과했다. 이후 실제 활성 릴리스는 서버의 `site/current`와 해당 빌드 보고서로 확인한다. `daus.uk` 전용 인증서 개인키와 CSR은 준비했으나 인증서는 아직 발급하지 않았고 공개 TLS 가상 호스트도 활성화하지 않았다.
+최초 검증 릴리스는 `20260930T004953Z-42455cde`이며 소스 커밋은 `59ad657`이다. 원점 경로·자산·식별 헤더 검사 24개를 통과했다. 이후 실제 활성 릴리스는 서버의 `site/current`와 해당 빌드 보고서로 확인한다.
 
-임시 서버의 인증서 경로는 `/etc/nginx/ssl/daus.uk/`이다. `private.pem`은 root 소유·0600으로 보관하고, `origin.csr`로 발급받은 인증서는 `origin.pem`에 설치한다. 개인키를 서버 밖으로 복사할 필요가 없다.
+임시 서버의 기존 CSR로 `daus.uk`만 포함하는 90일 Cloudflare Origin CA 인증서를 발급해 `/etc/nginx/ssl/daus.uk/origin.pem`에 설치했다. 만료는 **2026-12-29 11:13 KST (02:13 UTC)**이다. 신뢰 체인·호스트명·개인키 일치를 검증했고 `ops/nginx.domain.conf`를 활성화했다. `private.pem`은 root 소유·0600으로 서버 안에 보관한다. HTTPS 설정 후에도 기존 Galmegi 서비스의 정상 응답을 확인했다.
+
+사용자의 결정에 따라 임시 운영에서는 Cloudflare의 기존 자동 SSL 설정과 현재 **Full** 모드를 유지한다. 별도로 만든 `daus.uk portfolio strict TLS` 규칙은 비활성 상태다. NAS 복귀가 인증서 만료 이후로 미뤄지면 임시 운영을 계속하기 전에 인증서를 갱신한다.
+
+DNS는 `daus.uk`만 proxied A 레코드로 변경했고 TTL은 Auto이다. 기존 CNAME은 변경 직전 확인해 보존했으며 다른 DNS 레코드는 유지했다. 공개 `/healthz`에서 `X-Portfolio-Origin: galmegi-temporary`, `Cache-Control: no-store`, `CF-Cache-Status: DYNAMIC`을 확인했다.
 
 ## 배포 파일과 릴리스
 
 | 파일 | 용도 |
 | --- | --- |
 | `ops/nginx.shared.conf` | 임시 서버의 독립적인 loopback 정적 원점 |
-| `ops/nginx.domain.conf` | 인증서 준비 후 설치할 `daus.uk` 전용 HTTP·HTTPS 가상 호스트 |
+| `ops/nginx.domain.conf` | `daus.uk` 전용 HTTP·HTTPS 가상 호스트 |
 | `ops/nginx.conf` | NAS 컨테이너의 SPA·캐시·상태 확인 설정 |
 | `ops/compose.yaml`, `ops/compose.tunnel.yaml` | NAS 웹·Cloudflare Tunnel 컨테이너 |
 | `ops/install-tunnel-token.py` | NAS 터널 토큰의 숨김 입력·설치 |

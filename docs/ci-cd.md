@@ -4,13 +4,13 @@
 
 ## 현재 상태 — 2026-09-30
 
-NAS 수리 동안 Galmegi 개발팀 서버를 임시 배포 대상으로 사용하고 개인 도메인 `daus.uk`를 유지한다. 전용 배포 계정과 정적 원점을 설치했으며, 원점 검증 24개를 통과했다. **Cloudflare 로그인·TLS 인증서·DNS 전환은 대기 중이다. 도메인은 기존 NAS 연결을 유지하며 `DEPLOY_ENABLED=false`로 CI만 실행한다.** 원점 준비·도메인 전환·NAS 복귀는 [이전 절차](migration.md)를 따른다.
+NAS 수리 동안 Galmegi 개발팀 서버를 임시 배포 대상으로 사용하고 개인 도메인 `daus.uk`를 유지한다. 전용 배포 계정·정적 원점·TLS 인증서·HTTPS 가상 호스트를 설치하고 proxied A 레코드를 `13.209.179.165`로 전환했다. **공개 검증 24개 통과 후 `DEPLOY_ENABLED=true`로 CD를 활성화했으며, `main` 커밋 `9d4fafc`의 [첫 GitHub 배포](https://github.com/monitor5/portpolio-production/actions/runs/36659672747)가 성공했다.** 테스트·빌드, SSH 전송·활성화, 공개 HTTPS 검증 24개까지 완료했다. 사용자의 결정에 따라 임시 운영 동안 Cloudflare의 기존 자동 SSL 설정과 현재 Full 모드를 유지한다. 전환 기록·NAS 복귀는 [이전 절차](migration.md)를 따른다.
 
 GitHub `production` 환경은 `main` 브랜치로 제한한다. 등록된 임시 대상 설정은 다음과 같다.
 
 | 구분 | 이름 | 값 또는 용도 |
 | --- | --- | --- |
-| 저장소 변수 | `DEPLOY_ENABLED` | 공개 전환 검증 전 `false` |
+| 저장소 변수 | `DEPLOY_ENABLED` | `true` |
 | production 변수 | `DEPLOY_HOST` | `13.209.179.165` |
 | production 변수 | `DEPLOY_PORT` | `22` |
 | production 변수 | `DEPLOY_USER` | `portfolio-deploy` |
@@ -22,7 +22,7 @@ GitHub `production` 환경은 `main` 브랜치로 제한한다. 등록된 임시
 
 배포 전용 키 이름은 `portfolio_actions_ed25519`이다. 서버의 전용 계정은 sudo 권한 없이 포트폴리오 릴리스만 갱신하며 공개키에는 `restrict` 옵션을 적용했다. 개인키·호스트 인증 자료의 내용은 문서에 기록하지 않는다. `SSH_KNOWN_HOSTS`는 신뢰한 서버 키로 등록하며 배포 중 얻은 `ssh-keyscan` 결과를 자동 신뢰하지 않는다.
 
-2026-09-23 첫 GitHub CI에서는 애플리케이션 9개와 배포 도구 31개, 총 40개 테스트와 빌드·패키징·아티팩트 업로드가 성공했다. 2026-09-30 로컬 검증에서는 원점 식별 검증을 포함해 애플리케이션 9개와 Python 34개, 총 43개 테스트 및 actionlint·shellcheck가 통과했다. 이번 변경의 GitHub 실행 결과는 최신 Actions에서 확인한다. 원점 검증 성공은 도메인 전환이나 GitHub CD 성공을 의미하지 않는다.
+2026-09-23 첫 GitHub CI에서는 애플리케이션 9개와 배포 도구 31개, 총 40개 테스트와 빌드·패키징·아티팩트 업로드가 성공했다. 2026-09-30에는 원점 식별 검증을 포함해 애플리케이션 9개와 Python 34개, 총 43개 테스트가 로컬·GitHub에서 통과했다. 로컬 actionlint·shellcheck도 통과했다.
 
 ## 실행 흐름
 
@@ -65,7 +65,7 @@ gh workflow run ci-cd.yml --ref main --repo monitor5/portpolio-production
 gh run list --workflow ci-cd.yml --repo monitor5/portpolio-production
 ```
 
-첫 CD의 전송과 공개 검증까지 성공한 뒤 README와 운영 문서의 대기 상태를 갱신한다. CI/CD는 Nginx 설정·TLS 인증서·DNS·Compose 이미지·터널 토큰을 자동 변경하지 않는다. 서버 `incoming/<commit>-<run>-<attempt>/`와 `site/releases/`는 운영자가 `current`, `previous`를 보존하면서 정리한다.
+대상 서버를 다시 전환하면 첫 CD의 전송·공개 검증 성공까지 확인하고 운영 문서를 갱신한다. CI/CD는 Nginx 설정·TLS 인증서·DNS·Compose 이미지·터널 토큰을 자동 변경하지 않는다. 서버 `incoming/<commit>-<run>-<attempt>/`와 `site/releases/`는 운영자가 `current`, `previous`를 보존하면서 정리한다.
 
 ## 중지와 복원
 

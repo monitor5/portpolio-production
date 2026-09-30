@@ -40,11 +40,11 @@ npm run preview
 
 ## 배포
 
-개인 도메인은 [daus.uk](https://daus.uk)를 유지합니다. **2026-09-30 기준 NAS 수리 기간에 사용할 Galmegi 개발팀 서버에 임시 원점을 준비했습니다.** 전용 배포 계정과 정적 사이트를 설치하고 원점 검증 24개를 통과했습니다. Cloudflare 로그인·TLS 인증서·DNS 전환은 대기 중이며, 도메인은 기존 NAS 연결을 유지하고 있습니다.
+개인 도메인은 [daus.uk](https://daus.uk)를 유지합니다. **2026-09-30 NAS 수리 기간에 사용할 Galmegi 개발팀 서버로 임시 이전했습니다.** DNS 전환 후 공개 HTTPS·정적 자산·원점 식별 검증 24개를 통과했습니다. 임시 운영 동안 Cloudflare의 현재 Full 모드를 유지하며, NAS 복귀를 검증한 뒤 임시 서비스를 내립니다.
 
 GitHub Actions는 PR과 `main` push에서 테스트·빌드·배포 도구 검증을 실행하고, 공개 빌드만 릴리스 아티팩트로 보관합니다. 자동 배포를 활성화하면 설정된 서버에 검증된 빌드를 전송하고, 원점 검증 실패 시 이전 릴리스로 복원합니다. 공개 HTTPS 경로·정적 자산과 원점 식별 헤더도 확인합니다.
 
-**CI는 활성화되어 있고, CD는 도메인 전환 검증까지 `DEPLOY_ENABLED=false`로 유지합니다.** 현재 구성은 [배포 문서](docs/deployment.md), 실행 방법은 [CI/CD 문서](docs/ci-cd.md), 임시 이전과 수리 후 NAS 복귀 순서는 [이전 절차](docs/migration.md)에 있습니다. 인증 키·인증서 개인키·터널 토큰은 저장소에 포함하지 않습니다.
+**CI/CD를 활성화했으며 [첫 GitHub 배포](https://github.com/monitor5/portpolio-production/actions/runs/36659672747)의 전송·활성화·공개 검증이 성공했습니다.** 현재 구성은 [배포 문서](docs/deployment.md), 실행 방법은 [CI/CD 문서](docs/ci-cd.md), 임시 이전과 수리 후 NAS 복귀 순서는 [이전 절차](docs/migration.md)에 있습니다. 인증 키·인증서 개인키·터널 토큰은 저장소에 포함하지 않습니다.
 
 ## 참고 문서
 
