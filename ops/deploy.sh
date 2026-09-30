@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Transfer only the verified static release and the activation tool to the NAS.
+# Transfer only the verified static release and activation tool to the configured host.
 set -euo pipefail
 
 : "${SSH_PRIVATE_KEY:?Set the production SSH_PRIVATE_KEY secret}"

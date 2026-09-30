@@ -56,10 +56,10 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED != 'true'
         run: |
           echo '### Deployment is not enabled' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Tests and build ran; no production deployment was attempted. Complete NAS SSH setup, then set the repository variable DEPLOY_ENABLED=true. See docs/ci-cd.md.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Tests and build ran; no production deployment was attempted. Complete origin and domain setup, then set the repository variable DEPLOY_ENABLED=true. See docs/ci-cd.md.' >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
-    name: Deploy to NAS
+    name: Deploy to production
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-24.04
@@ -106,6 +106,11 @@ jobs:
         if: steps.current.outputs.deploy == 'true'
         env:
           DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+          DEPLOY_ORIGIN: ${{ vars.DEPLOY_ORIGIN }}
         run: |
-          python3 ops/verify-public.py .cache/release/deployment-build-report.json --url "${DEPLOY_URL:-https://daus.uk}"
-          echo "Deployed and publicly verified commit $GITHUB_SHA at https://daus.uk" >> "$GITHUB_STEP_SUMMARY"
+          options=(--url "${DEPLOY_URL:-https://daus.uk}")
+          if [ -n "$DEPLOY_ORIGIN" ]; then
+            options+=(--expected-origin "$DEPLOY_ORIGIN")
+          fi
+          python3 ops/verify-public.py .cache/release/deployment-build-report.json "${options[@]}"
+          echo "Deployed and publicly verified commit $GITHUB_SHA at ${DEPLOY_URL:-https://daus.uk}" >> "$GITHUB_STEP_SUMMARY"

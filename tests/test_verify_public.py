@@ -25,7 +25,7 @@ REPORT = {
 
 
 @contextmanager
-def serve(transform=None):
+def serve(transform=None, origin=None):
     requests = []
 
     class Handler(BaseHTTPRequestHandler):
@@ -42,6 +42,8 @@ def serve(transform=None):
             self.send_response(status)
             self.send_header('Content-Type', content_type)
             self.send_header('Content-Length', str(len(body)))
+            if path == 'healthz' and origin is not None:
+                self.send_header('X-Portfolio-Origin', origin)
             self.end_headers()
             self.wfile.write(body)
 
@@ -60,14 +62,14 @@ def serve(transform=None):
 
 
 class VerifyPublicTests(unittest.TestCase):
-    def run_verifier(self, url, attempts=1, report=None):
+    def run_verifier(self, url, attempts=1, report=None, expected_origin=None):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'deployment-build-report.json'
             path.write_text(json.dumps(REPORT if report is None else report))
-            return subprocess.run(
-                [sys.executable, str(SCRIPT), str(path), '--url', url, '--attempts', str(attempts), '--delay', '0'],
-                text=True, capture_output=True, timeout=15,
-            )
+            command = [sys.executable, str(SCRIPT), str(path), '--url', url, '--attempts', str(attempts), '--delay', '0']
+            if expected_origin is not None:
+                command.extend(['--expected-origin', expected_origin])
+            return subprocess.run(command, text=True, capture_output=True, timeout=15)
 
     def test_success_checks_every_asset_and_localized_spa_despite_analytics(self):
         def analytics(path, status, kind, body, requests):
@@ -115,6 +117,23 @@ class VerifyPublicTests(unittest.TestCase):
             result = self.run_verifier(url)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('/healthz', result.stderr)
+
+    def test_expected_origin_matches_health_header(self):
+        with serve(origin='galmegi-temporary') as (url, _):
+            result = self.run_verifier(url, expected_origin='galmegi-temporary')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_mismatched_origin_fails_despite_identical_content(self):
+        with serve(origin='nas') as (url, _):
+            result = self.run_verifier(url, expected_origin='galmegi-temporary')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("expected X-Portfolio-Origin 'galmegi-temporary', received ['nas']", result.stderr)
+
+    def test_missing_origin_fails_when_required(self):
+        with serve() as (url, _):
+            result = self.run_verifier(url, expected_origin='galmegi-temporary')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("expected X-Portfolio-Origin 'galmegi-temporary', received []", result.stderr)
 
     def test_retries_entire_pass_after_http_failure_and_uses_archive_fallback(self):
         def transient(path, status, kind, body, requests):

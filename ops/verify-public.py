@@ -80,7 +80,7 @@ def fetch(url, limit):
         data = response.read(limit + 1)
         if len(data) > limit:
             raise ValueError(f'{url}: response exceeds expected size limit')
-        return data, response.headers.get_content_type()
+        return data, response.headers
 
 
 def without_query(url):
@@ -88,7 +88,7 @@ def without_query(url):
     return urlunsplit((parts.scheme, parts.netloc, parts.path, '', ''))
 
 
-def verify_once(base, report, files, bundles):
+def verify_once(base, report, files, bundles, expected_origin=None):
     token = report.get('commit') or report['archiveSha256']
     checked = 0
     for name, item in files.items():
@@ -104,17 +104,21 @@ def verify_once(base, report, files, bundles):
     pages.append(('/index.html', None))
     for route, language in pages:
         url = make_url(base, route, token, language)
-        data, content_type = fetch(url, HTML_LIMIT)
+        data, headers = fetch(url, HTML_LIMIT)
         parser = BundleReferences()
         parser.feed(data.decode('utf-8'))
         actual = {without_query(urljoin(url, reference)) for reference in parser.references}
-        if content_type != 'text/html' or not parser.has_html or not expected.issubset(actual):
+        if headers.get_content_type() != 'text/html' or not parser.has_html or not expected.issubset(actual):
             raise ValueError(f'{url}: HTML does not reference the expected JavaScript and CSS bundles')
         checked += 1
 
-    health, _ = fetch(make_url(base, '/healthz', token), 3)
+    health, headers = fetch(make_url(base, '/healthz', token), 3)
     if health != b'ok\n':
         raise ValueError('/healthz: expected exactly ok followed by a newline')
+    if expected_origin is not None:
+        origins = headers.get_all('X-Portfolio-Origin', [])
+        if origins != [expected_origin]:
+            raise ValueError(f'/healthz: expected X-Portfolio-Origin {expected_origin!r}, received {origins!r}')
     return checked + 1
 
 
@@ -124,6 +128,7 @@ def main():
     parser.add_argument('--url', default='https://daus.uk')
     parser.add_argument('--attempts', type=int, default=6)
     parser.add_argument('--delay', type=float, default=5)
+    parser.add_argument('--expected-origin', help='Require this exact X-Portfolio-Origin header on /healthz')
     args = parser.parse_args()
     parts = urlsplit(args.url)
     if parts.scheme not in ('http', 'https') or not parts.netloc or parts.query or parts.fragment:
@@ -134,7 +139,7 @@ def main():
         report, files, bundles = read_report(args.report)
         for attempt in range(1, args.attempts + 1):
             try:
-                checked = verify_once(args.url, report, files, bundles)
+                checked = verify_once(args.url, report, files, bundles, args.expected_origin)
                 print(json.dumps({'verified': True, 'url': args.url, 'checks': checked, 'attempt': attempt}))
                 return 0
             except (OSError, URLError, HTTPException, ValueError) as error:
